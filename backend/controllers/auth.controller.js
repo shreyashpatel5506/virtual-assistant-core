@@ -6,6 +6,7 @@ import { generateToken, verifyToken } from "./token.js"; // Import the token gen
 import User from "../models/user.model.js";
 import uploadOnCloudinary from './../config/cloudinary.js';
 import geminiResponse from "../gemini.js";
+import { storehistory } from "./history.controller.js";
 import moment from "moment";
 import axios from "axios";
 dotenv.config();
@@ -302,20 +303,49 @@ const generateDocWithAPI = async (content) => {
     }
 };
 
+const logAssistantHistory = async (req, assistantResponse, userMessage) => {
+    try {
+        const historyAction = [
+            `User: ${userMessage}`,
+            `Assistant: ${assistantResponse.response}`,
+            assistantResponse.type ? `Type: ${assistantResponse.type}` : null,
+        ]
+            .filter(Boolean)
+            .join(" | ");
+
+        await storehistory(
+            {
+                user: req.user,
+                body: { action: historyAction },
+            },
+            {
+                status: () => ({
+                    json: () => null,
+                }),
+            }
+        );
+    } catch (error) {
+        console.error("Error storing assistant history:", error);
+    }
+};
+
 export const askToAssistant = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         const userMessage = req.body.message;
         const assistantName = user.assistantName;
         const authorName = user.name;
+        let assistantResponse = null;
 
         const result = await geminiResponse(userMessage, assistantName, authorName);
 
         const jsonMatch = result.text.match(/{[\s\S]*}/);
         if (!jsonMatch) {
-            return res.status(200).json({
+            assistantResponse = {
                 response: "Sorry, I can't understand.",
-            });
+            };
+            await logAssistantHistory(req, assistantResponse, userMessage);
+            return res.status(200).json(assistantResponse);
         }
 
         const gemResult = JSON.parse(jsonMatch[0]);
@@ -325,351 +355,391 @@ export const askToAssistant = async (req, res) => {
             /** ===================== GENERAL ===================== **/
             case "general":
             case "ai_chat":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: gemResult.response,
-                });
+                };
+                break;
 
             /** ===================== SEARCH & MEDIA ===================== **/
             case "google_search":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching Google for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             case "youtube_search":
             case "youtube_play":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching YouTube for "${gemResult.userinput}"`,
                     actionUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             case "spotify_play":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Playing on Spotify: ${gemResult.userinput}`,
                     actionUrl: `https://open.spotify.com/search/${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             /** ===================== DATE & TIME ===================== **/
             case "get_time":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Current time is ${moment().format("HH:mm:ss")}`,
-                });
+                };
+                break;
             case "get_date":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Current date is ${moment().format("YYYY-MM-DD")}`,
-                });
+                };
+                break;
             case "get_day":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Today is ${moment().format("dddd")}`,
-                });
+                };
+                break;
             case "get_month":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Current month is ${moment().format("MMMM")}`,
-                });
+                };
+                break;
 
             /** ===================== TOOLS & APPS ===================== **/
             case "calculator_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening calculator",
                     actionUrl: "https://www.google.com/search?q=calculator",
-                });
+                };
+                break;
 
             case "calendar_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening calendar",
                     actionUrl: "https://calendar.google.com",
-                });
+                };
+                break;
 
             case "notes_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening notes app",
                     actionUrl: "https://keep.google.com", // example: Google Keep
-                });
+                };
+                break;
 
             case "reminder_set":
             case "alarm_set":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: gemResult.response,
-                });
+                };
+                break;
 
             /** ===================== SOCIAL MEDIA ===================== **/
             case "instagram_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening Instagram",
                     actionUrl: "https://instagram.com",
-                });
+                };
+                break;
             case "facebook_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening Facebook",
                     actionUrl: "https://facebook.com",
-                });
+                };
+                break;
             case "twitter_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening Twitter/X",
                     actionUrl: "https://twitter.com",
-                });
+                };
+                break;
             case "whatsapp_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening WhatsApp",
                     actionUrl: "https://web.whatsapp.com",
-                });
+                };
+                break;
             case "telegram_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening Telegram",
                     actionUrl: "https://web.telegram.org",
-                });
+                };
+                break;
             case "snapchat_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening Snapchat",
                     actionUrl: "https://www.snapchat.com",
-                });
+                };
+                break;
             case "linkedin_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Opening LinkedIn",
                     actionUrl: "https://linkedin.com",
-                });
+                };
+                break;
 
             /** ===================== WEATHER & LOCATION ===================== **/
             case "weather_show":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching weather for ${gemResult.userinput}`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " weather"
                     )}`,
-                });
+                };
+                break;
 
             case "maps_open":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Opening maps for ${gemResult.userinput}`,
                     actionUrl: `https://www.google.com/maps/search/${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             case "location_share":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: "Sharing your current location",
-                });
+                };
+                break;
 
             /** ===================== SPORTS ===================== **/
             case "live_cricket_score":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching live cricket scores for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " live cricket score"
                     )}`,
-                });
+                };
+                break;
 
             case "live_football_score":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching live football scores for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " live football score"
                     )}`,
-                });
+                };
+                break;
 
             case "sports_news":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching latest sports news for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " sports news"
                     )}`,
-                });
+                };
+                break;
 
             /** ===================== NEWS & ENTERTAINMENT ===================== **/
             case "news_latest":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching latest news`,
                     actionUrl: `https://news.google.com`,
-                });
+                };
+                break;
 
             case "movie_info":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching movie info for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " movie"
                     )}`,
-                });
+                };
+                break;
 
             case "tv_show_info":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching TV show info for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " TV show"
                     )}`,
-                });
+                };
+                break;
 
             case "celebrity_info":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching info about "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             /** ===================== UTILITIES ===================== **/
             case "translate_text":
             case "currency_convert":
             case "unit_convert":
             case "system_command":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching for ${type.replace("_", " ")}`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             /** ===================== FINANCE ===================== **/
             case "stock_price":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching stock price for ${gemResult.userinput}`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " stock price"
                     )}`,
-                });
+                };
+                break;
 
             case "crypto_price":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching crypto price for ${gemResult.userinput}`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput + " crypto price"
                     )}`,
-                });
+                };
+                break;
 
             case "finance_news":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Fetching latest finance news`,
                     actionUrl: `https://www.google.com/search?q=finance news`,
-                });
+                };
+                break;
 
             /** ===================== TRAVEL ===================== **/
             case "flight_status":
             case "book_flight":
             case "book_hotel":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Searching travel info for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             /** ===================== COMMUNICATION ===================== **/
             case "send_email":
             case "send_sms":
             case "call_contact":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: gemResult.response,
-                });
+                };
+                break;
 
             /** ===================== AI TOOLS ===================== **/
             case "ai_image_generate":
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: `Generating image for "${gemResult.userinput}"`,
                     actionUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
+                break;
 
             case "document_summarize":
             case "code_generate": {
                 const docUrl = await generateDocWithAPI(gemResult.response);
-                return res.json({
+                assistantResponse = {
                     type,
                     userInput: gemResult.userinput,
                     response: gemResult.response,
                     actionUrl: docUrl,
-                });
+                };
+                break;
             }
 
             /** ===================== DEFAULT ===================== **/
             default:
-                return res.json({
+                assistantResponse = {
                     type: "google_search",
                     userInput: gemResult.userinput,
                     response: `Searching Google for "${gemResult.userinput}"`,
                     actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
                         gemResult.userinput
                     )}`,
-                });
+                };
         }
+
+        await logAssistantHistory(req, assistantResponse, userMessage);
+        return res.json(assistantResponse);
     } catch (error) {
         console.error("Error in askToAssistant:", error);
         res.status(500).json({ error: "Something went wrong" });
