@@ -3,12 +3,12 @@ import { UserContext } from '../Context/usercontext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { axiosInstance } from '../utils/axiosInstance';
-import { 
-    ArrowLeft, 
-    Search, 
-    Clock, 
-    ChevronLeft, 
-    ChevronRight, 
+import {
+    ArrowLeft,
+    Search,
+    Clock,
+    ChevronLeft,
+    ChevronRight,
     Loader,
     Calendar,
     Music,
@@ -61,6 +61,7 @@ const History = () => {
                 }
             });
             if (response.data.success) {
+                setLoading(false);
                 setHistoryList(response.data.histories || []);
                 setPagination(response.data.pagination || {
                     page: 1,
@@ -135,7 +136,7 @@ const History = () => {
 
     return (
         <div className="w-full min-h-screen bg-gradient-to-t from-black to-[#030353] text-white font-sans flex flex-col items-center relative overflow-hidden py-8 px-4">
-            
+
             {/* Background glowing bubbles */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 {[...Array(15)].map((_, i) => {
@@ -311,11 +312,11 @@ const History = () => {
                                     <ChevronLeft size={16} />
                                     <span>Previous</span>
                                 </button>
-                                
+
                                 <span className="text-sm font-semibold text-gray-300 select-none bg-black/20 px-3.5 py-1.5 rounded-full border border-white/[0.03]">
                                     Page {pagination.page} of {pagination.pages}
                                 </span>
-                                
+
                                 <button
                                     onClick={() => handlePageChange(pagination.page + 1)}
                                     disabled={pagination.page === pagination.pages}
