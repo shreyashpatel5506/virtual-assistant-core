@@ -32,8 +32,9 @@ const History = () => {
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [debounceSearch, setDebounceSearch] = useState('');
+    const [page, setPage] = useState(1);
+
     const [pagination, setPagination] = useState({
-        page: 1,
         limit: 10,
         total: 0,
         pages: 1
@@ -43,7 +44,7 @@ const History = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebounceSearch(searchQuery);
-            setPagination(prev => ({ ...prev, page: 1 })); // reset to page 1 on search
+            setPage(1); // reset to page 1 on search
         }, 500);
 
         return () => clearTimeout(timer);
@@ -55,18 +56,17 @@ const History = () => {
         try {
             const response = await axiosInstance.get('/auth/history', {
                 params: {
-                    page: pagination.page,
+                    page,
                     limit: pagination.limit,
                     search: debounceSearch
                 }
             });
             if (response.data.success) {
                 setHistoryList(response.data.histories || []);
-                setPagination(response.data.pagination || {
-                    page: 1,
-                    limit: 10,
-                    total: 0,
-                    pages: 1
+                setPagination({
+                    limit: response.data.pagination?.limit || 10,
+                    total: response.data.pagination?.total || 0,
+                    pages: response.data.pagination?.pages || 1
                 });
             } else {
                 toast.error('Failed to retrieve history');
@@ -81,7 +81,7 @@ const History = () => {
 
     useEffect(() => {
         fetchHistory();
-    }, [pagination.page, debounceSearch]);
+    }, [page, debounceSearch]);
 
     // Helper to parse history action string
     const parseAction = (action = '') => {
@@ -129,10 +129,9 @@ const History = () => {
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.pages) {
-            setPagination(prev => ({ ...prev, page: newPage }));
+            setPage(newPage);
         }
     };
-
     return (
         <div className="w-full min-h-screen bg-gradient-to-t from-black to-[#030353] text-white font-sans flex flex-col items-center relative overflow-hidden py-8 px-4">
 
@@ -305,7 +304,7 @@ const History = () => {
                             <div className="flex justify-center items-center gap-4 mt-6 mb-8">
                                 <button
                                     onClick={() => handlePageChange(pagination.page - 1)}
-                                    disabled={pagination.page === 1}
+                                    disabled={page === 1}
                                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
                                     <ChevronLeft size={16} />
@@ -313,12 +312,12 @@ const History = () => {
                                 </button>
 
                                 <span className="text-sm font-semibold text-gray-300 select-none bg-black/20 px-3.5 py-1.5 rounded-full border border-white/[0.03]">
-                                    Page {pagination.page} of {pagination.pages}
+                                    Page {page} of {pagination.pages}
                                 </span>
 
                                 <button
                                     onClick={() => handlePageChange(pagination.page + 1)}
-                                    disabled={pagination.page === pagination.pages}
+                                    disabled={page === pagination.pages}
                                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
                                     <span>Next</span>
