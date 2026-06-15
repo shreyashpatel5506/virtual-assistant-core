@@ -25,13 +25,13 @@ import toast from 'react-hot-toast';
 
 
 const History = () => {
-    console.log("History mounted");
+    // // console.log("History mounted");
 
-    useEffect(() => {
-        return () => {
-            console.log("History unmounted");
-        };
-    }, []);
+    // useEffect(() => {
+    //     return () => {
+    //         // console.log("History unmounted");
+    //     };
+    // }, []);
     const { users } = useContext(UserContext);
     const navigate = useNavigate();
 
