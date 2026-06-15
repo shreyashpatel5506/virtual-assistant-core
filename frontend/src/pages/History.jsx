@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { UserContext } from '../Context/usercontext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -132,30 +132,36 @@ const History = () => {
             setPage(newPage);
         }
     };
+    const bubbles = useMemo(() => {
+        return [...Array(15)].map((_, i) => ({
+            id: i,
+            size: 30 + Math.random() * 70,
+            left: Math.random() * 100,
+            duration: 8 + Math.random() * 10,
+            delay: Math.random() * 4
+        }));
+    }, []);
     return (
         <div className="w-full min-h-screen bg-gradient-to-t from-black to-[#030353] text-white font-sans flex flex-col items-center relative overflow-hidden py-8 px-4">
 
             {/* Background glowing bubbles */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                {[...Array(15)].map((_, i) => {
-                    const size = 30 + Math.random() * 70;
-                    return (
-                        <div
-                            key={i}
-                            className="bubble absolute"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                animationDuration: `${8 + Math.random() * 10}s`,
-                                animationDelay: `${Math.random() * 4}s`,
-                                width: `${size}px`,
-                                height: `${size}px`,
-                                opacity: 0.15,
-                                zIndex: 0,
-                                transform: 'scale(0.8)'
-                            }}
-                        />
-                    );
-                })}
+                {bubbles.map((bubble) => (
+                    <div
+                        key={bubble.id}
+                        className="bubble absolute"
+                        style={{
+                            left: `${bubble.left}%`,
+                            animationDuration: `${bubble.duration}s`,
+                            animationDelay: `${bubble.delay}s`,
+                            width: `${bubble.size}px`,
+                            height: `${bubble.size}px`,
+                            opacity: 0.15,
+                            zIndex: 0,
+                            transform: 'scale(0.8)'
+                        }}
+                    />
+                ))}
             </div>
 
             {/* Header Content */}
@@ -303,7 +309,7 @@ const History = () => {
                         {pagination.pages > 1 && (
                             <div className="flex justify-center items-center gap-4 mt-6 mb-8">
                                 <button
-                                    onClick={() => handlePageChange(pagination.page - 1)}
+                                    onClick={() => handlePageChange(page - 1)}
                                     disabled={page === 1}
                                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
@@ -316,7 +322,7 @@ const History = () => {
                                 </span>
 
                                 <button
-                                    onClick={() => handlePageChange(pagination.page + 1)}
+                                    onClick={() => handlePageChange(page + 1)}
                                     disabled={page === pagination.pages}
                                     className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
