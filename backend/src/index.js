@@ -19,7 +19,9 @@ const allowedOrigins = [
   FRONTEND_URL,
   process.env.RENDER_EXTERNAL_URL,
   'http://localhost:5173',
-  'https://localhost:5173'
+  'https://localhost:5173',
+  'http://localhost:8080',
+  'https://localhost:8080'
 ].filter(Boolean);
 
 app.use(cors({

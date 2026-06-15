@@ -163,7 +163,7 @@ const History = () => {
             <div className="w-full max-w-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 z-10 mb-8">
                 <button
                     onClick={() => navigate('/')}
-                    className="flex items-center gap-2 self-start px-4 py-2 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 border border-white border-opacity-10 transition-all text-sm font-semibold cursor-pointer shadow-md"
+                    className="flex items-center gap-2 self-start px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-all text-sm font-semibold cursor-pointer shadow-md"
                 >
                     <ArrowLeft size={16} />
                     <span>Back to Assistant</span>
@@ -188,7 +188,7 @@ const History = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search queries or assistant responses..."
-                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-black bg-opacity-40 border border-white border-opacity-15 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all backdrop-blur-md"
+                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-black/40 border border-white/15 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all backdrop-blur-md"
                     />
                     {searchQuery && (
                         <button
@@ -209,7 +209,7 @@ const History = () => {
                         <p className="text-gray-400 text-sm">Retrieving your logs...</p>
                     </div>
                 ) : historyList.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20 bg-white bg-opacity-5 border border-white border-opacity-5 rounded-2xl p-8 backdrop-blur-md">
+                    <div className="flex-1 flex flex-col items-center justify-center py-20 bg-white/5 border border-white/5 rounded-2xl p-8 backdrop-blur-md">
                         <Info size={48} className="text-gray-400 mb-3" />
                         <p className="text-lg font-semibold text-gray-200">No command history found</p>
                         <p className="text-gray-400 text-sm text-center max-w-md mt-1">
@@ -227,12 +227,12 @@ const History = () => {
                                         initial={{ opacity: 0, y: 15 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.5) }}
-                                        className="bg-white bg-opacity-5 hover:bg-opacity-[0.08] border border-white border-opacity-5 rounded-2xl p-5 transition-all duration-300 backdrop-blur-md shadow-md hover:shadow-cyan-950/20"
+                                        className="bg-white/5 hover:bg-white/[0.08] border border-white/5 rounded-2xl p-5 transition-all duration-300 backdrop-blur-md shadow-md hover:shadow-cyan-950/20"
                                     >
                                         {parsed.isConversation ? (
                                             <div>
                                                 {/* User Query */}
-                                                <div className="flex gap-3.5 items-start border-b border-white border-opacity-[0.03] pb-3.5 mb-3.5">
+                                                <div className="flex gap-3.5 items-start border-b border-white/[0.03] pb-3.5 mb-3.5">
                                                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold shadow-md">
                                                         U
                                                     </div>
@@ -267,7 +267,7 @@ const History = () => {
                                             </div>
                                         ) : (
                                             <div className="flex gap-3.5 items-center">
-                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-900 bg-opacity-40 flex items-center justify-center text-cyan-400">
+                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-900/40 flex items-center justify-center text-cyan-400">
                                                     <Info size={16} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -277,7 +277,7 @@ const History = () => {
                                         )}
 
                                         {/* Card Footer Metadata */}
-                                        <div className="flex justify-between items-center text-xs text-gray-400 mt-4 border-t border-white border-opacity-[0.03] pt-3">
+                                        <div className="flex justify-between items-center text-xs text-gray-400 mt-4 border-t border-white/[0.03] pt-3">
                                             <div className="flex items-center gap-1.5">
                                                 <Clock size={12} className="text-gray-400" />
                                                 <span>
@@ -289,7 +289,7 @@ const History = () => {
                                             </div>
 
                                             {parsed.isConversation && parsed.type && (
-                                                <div className="flex items-center gap-1.5 bg-white bg-opacity-5 text-gray-300 px-3 py-1 rounded-full text-[10px] border border-white border-opacity-5 font-semibold capitalize shadow-inner">
+                                                <div className="flex items-center gap-1.5 bg-white/5 text-gray-300 px-3 py-1 rounded-full text-[10px] border border-white/5 font-semibold capitalize shadow-inner">
                                                     {getTypeIcon(parsed.type)}
                                                     <span>{formatBadgeText(parsed.type)}</span>
                                                 </div>
@@ -306,20 +306,20 @@ const History = () => {
                                 <button
                                     onClick={() => handlePageChange(pagination.page - 1)}
                                     disabled={pagination.page === 1}
-                                    className="px-4.5 py-2 rounded-xl bg-white bg-opacity-5 hover:bg-opacity-10 disabled:opacity-35 disabled:cursor-not-allowed border border-white border-opacity-5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
+                                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
                                     <ChevronLeft size={16} />
                                     <span>Previous</span>
                                 </button>
                                 
-                                <span className="text-sm font-semibold text-gray-300 select-none bg-black bg-opacity-20 px-3.5 py-1.5 rounded-full border border-white border-opacity-[0.03]">
+                                <span className="text-sm font-semibold text-gray-300 select-none bg-black/20 px-3.5 py-1.5 rounded-full border border-white/[0.03]">
                                     Page {pagination.page} of {pagination.pages}
                                 </span>
                                 
                                 <button
                                     onClick={() => handlePageChange(pagination.page + 1)}
                                     disabled={pagination.page === pagination.pages}
-                                    className="px-4.5 py-2 rounded-xl bg-white bg-opacity-5 hover:bg-opacity-10 disabled:opacity-35 disabled:cursor-not-allowed border border-white border-opacity-5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
+                                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed border border-white/5 transition-all flex items-center gap-1 cursor-pointer font-medium text-sm shadow-md"
                                 >
                                     <span>Next</span>
                                     <ChevronRight size={16} />
