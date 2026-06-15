@@ -9,6 +9,7 @@ import {
     logout,
     passwordReset
 } from "../controllers/auth.controller.js";
+import { retrievehistory } from '../controllers/history.controller.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import upload from '../middleware/multer.js';
 
@@ -24,6 +25,7 @@ authRoute.post('/password-reset', passwordReset);
 // Protected routes (require authentication)
 authRoute.post('/updateAssistant', authMiddleware, upload.single("assistantImage"), updateProfile);
 authRoute.get('/user-profile', authMiddleware, getUserProfile);
+authRoute.get('/history', authMiddleware, retrievehistory);
 authRoute.post('/logout', authMiddleware, logout);
 
 export default authRoute;

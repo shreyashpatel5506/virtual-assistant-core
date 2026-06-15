@@ -265,6 +265,18 @@ recognitionRef.current.interimResults = false;
                 Logout
             </motion.button>
 
+            {/* History Button */}
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="fixed top-36 right-4 p-3 rounded-full pl-6 pr-6
+                bg-gradient-to-r from-cyan-400 to-blue-500
+                text-black font-bold text-lg shadow-lg z-10"
+                onClick={() => navigate('/history')}
+            >
+                History
+            </motion.button>
+
             {/* Assistant Avatar */}
             <div className="relative z-10 flex flex-col items-center">
                 <motion.div

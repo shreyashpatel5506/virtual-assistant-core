@@ -333,6 +333,7 @@ const generateDocWithAPI = async (content) => {
 
 const logAssistantHistory = async (req, assistantResponse, userMessage) => {
   try {
+    if (!assistantResponse || !assistantResponse.response) return;
     const historyAction = [
       `User: ${userMessage}`,
       `Assistant: ${assistantResponse.response}`,
@@ -363,6 +364,13 @@ export const askToAssistant = async (req, res) => {
     const userMessage = req.body.message;
     const assistantName = user.assistantName;
     const authorName = user.name;
+
+    // Intercept res.json to automatically log assistant interactions
+    const originalJson = res.json.bind(res);
+    res.json = async (data) => {
+      await logAssistantHistory(req, data, userMessage);
+      return originalJson(data);
+    };
 
     const result = await geminiResponse(userMessage, assistantName, authorName);
 

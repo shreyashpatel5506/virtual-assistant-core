@@ -10,6 +10,7 @@ import React from 'react'
 import Home from './pages/Home.jsx'
 import toast, { Toaster } from 'react-hot-toast';
 import Customize2 from './pages/Customize2'
+import History from './pages/History'
 import { Navigate } from "react-router-dom";
 function App() {
   const { users, setUsers } = useContext(UserContext); // ✅ use UserContext
@@ -60,6 +61,15 @@ const ProtectedRoute = ({ children }) => {
     element={
       <ProtectedRoute>
         <Customize2 />
+      </ProtectedRoute>
+    }
+  />
+
+  <Route
+    path="/history"
+    element={
+      <ProtectedRoute>
+        <History />
       </ProtectedRoute>
     }
   />
