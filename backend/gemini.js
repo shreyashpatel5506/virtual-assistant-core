@@ -4,7 +4,7 @@ const geminiResponse = async (userMessage, assistantName, authorName) => {
   try {
     const groqApiUrl = 'https://api.groq.com/openai/v1/chat/completions';
     const groqApiKey = process.env.GROQ_API_KEY;
-    const groqModel = 'llama-3.1-70b-versatile';
+    const groqModel = 'llama-3.1-8b-instant';
 
     if (!groqApiKey) {
       throw new Error('GROQ_API_KEY is not configured');
