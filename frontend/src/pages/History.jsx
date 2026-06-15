@@ -29,7 +29,7 @@ const History = () => {
 
     // State
     const [historyList, setHistoryList] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [debounceSearch, setDebounceSearch] = useState('');
     const [pagination, setPagination] = useState({
@@ -61,7 +61,6 @@ const History = () => {
                 }
             });
             if (response.data.success) {
-                setLoading(false);
                 setHistoryList(response.data.histories || []);
                 setPagination(response.data.pagination || {
                     page: 1,
