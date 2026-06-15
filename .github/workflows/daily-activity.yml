@@ -1,9 +1,7 @@
 name: Project Maintenance
-
 on:
   schedule:
-    # Runs at 12:01, 15:01, 18:01, and 21:01 UTC daily
-    - cron: "1 12,15,21 * * *"
+    - cron: "1 * * * 1"
   workflow_dispatch: # Allows you to run it manually anytime
 
 jobs:

@@ -1,4 +1,4 @@
-# 🎙️ Virtual AI Voice Assistant
+# 🎙️ Virtual AI Voice & Text Assistant
 
 A modern, full-stack voice and chat assistant powered by AI (Gemini). Built with React, Node.js, Express, and MongoDB. This assistant can handle voice commands, perform web searches, control media, manage tasks, and much more through an intuitive web interface.
 

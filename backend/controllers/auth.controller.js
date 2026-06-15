@@ -6,6 +6,7 @@ import { generateToken, verifyToken } from "./token.js"; // Import the token gen
 import User from "../models/user.model.js";
 import uploadOnCloudinary from "./../config/cloudinary.js";
 import geminiResponse from "../gemini.js";
+import { storehistory } from "./history.controller.js";
 import moment from "moment";
 import axios from "axios";
 dotenv.config();
@@ -50,7 +51,7 @@ export const sendOtp = async (req, res) => {
           "api-key": process.env.BREVO_API_KEY,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     otpStorage.set(email, {
@@ -62,7 +63,7 @@ export const sendOtp = async (req, res) => {
   } catch (error) {
     console.error(
       "Brevo API OTP error:",
-      error?.response?.data || error.message
+      error?.response?.data || error.message,
     );
     return res
       .status(500)
@@ -111,12 +112,10 @@ export const signUP = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res
-        .status(422)
-        .json({
-          message: "Password must be at least 6 characters",
-          success: false,
-        });
+      return res.status(422).json({
+        message: "Password must be at least 6 characters",
+        success: false,
+      });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -204,12 +203,10 @@ export const passwordReset = async (req, res) => {
   }
 
   if (newPassword.length < 6) {
-    return res
-      .status(422)
-      .json({
-        message: "Password must be at least 6 characters",
-        success: false,
-      });
+    return res.status(422).json({
+      message: "Password must be at least 6 characters",
+      success: false,
+    });
   }
 
   user.password = bcrypt.hashSync(newPassword, 10);
@@ -243,7 +240,7 @@ export const updateProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { assistantName, assistantImage: finalImage },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -324,13 +321,39 @@ const generateDocWithAPI = async (content) => {
           Authorization: `Bearer ${process.env.APITEMPLATE_API_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return apiResponse?.data?.url || null; // Direct doc link
   } catch (err) {
     console.error("Doc generation error:", err.message);
     return null;
+  }
+};
+
+const logAssistantHistory = async (req, assistantResponse, userMessage) => {
+  try {
+    const historyAction = [
+      `User: ${userMessage}`,
+      `Assistant: ${assistantResponse.response}`,
+      assistantResponse.type ? `Type: ${assistantResponse.type}` : null,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
+    await storehistory(
+      {
+        user: req.user,
+        body: { action: historyAction },
+      },
+      {
+        status: () => ({
+          json: () => null,
+        }),
+      },
+    );
+  } catch (error) {
+    console.error("Error storing assistant history:", error);
   }
 };
 
@@ -370,7 +393,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching Google for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -381,7 +404,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching YouTube for "${gemResult.userinput}"`,
           actionUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -391,7 +414,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Playing on Spotify: ${gemResult.userinput}`,
           actionUrl: `https://open.spotify.com/search/${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -512,7 +535,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Fetching weather for ${gemResult.userinput}`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " weather"
+            gemResult.userinput + " weather",
           )}`,
         });
 
@@ -522,7 +545,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Opening maps for ${gemResult.userinput}`,
           actionUrl: `https://www.google.com/maps/search/${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -540,7 +563,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching live cricket scores for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " live cricket score"
+            gemResult.userinput + " live cricket score",
           )}`,
         });
 
@@ -550,7 +573,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching live football scores for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " live football score"
+            gemResult.userinput + " live football score",
           )}`,
         });
 
@@ -560,7 +583,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Fetching latest sports news for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " sports news"
+            gemResult.userinput + " sports news",
           )}`,
         });
 
@@ -579,7 +602,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching movie info for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " movie"
+            gemResult.userinput + " movie",
           )}`,
         });
 
@@ -589,7 +612,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching TV show info for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " TV show"
+            gemResult.userinput + " TV show",
           )}`,
         });
 
@@ -599,7 +622,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching info about "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -613,7 +636,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching for ${type.replace("_", " ")}`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -624,7 +647,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Fetching stock price for ${gemResult.userinput}`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " stock price"
+            gemResult.userinput + " stock price",
           )}`,
         });
 
@@ -634,7 +657,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Fetching crypto price for ${gemResult.userinput}`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput + " crypto price"
+            gemResult.userinput + " crypto price",
           )}`,
         });
 
@@ -655,7 +678,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching travel info for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -676,7 +699,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Generating image for "${gemResult.userinput}"`,
           actionUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
 
@@ -698,7 +721,7 @@ export const askToAssistant = async (req, res) => {
           userInput: gemResult.userinput,
           response: `Searching Google for "${gemResult.userinput}"`,
           actionUrl: `https://www.google.com/search?q=${encodeURIComponent(
-            gemResult.userinput
+            gemResult.userinput,
           )}`,
         });
     }

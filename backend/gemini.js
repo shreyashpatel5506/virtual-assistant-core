@@ -2,7 +2,13 @@ import axios from 'axios';
 
 const geminiResponse = async (userMessage, assistantName, authorName) => {
   try {
-    const apiGemURL = process.env.GEMINI_API_URL || 'https://api.gemini.example.com/v1';
+    const groqApiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+    const groqApiKey = process.env.GROQ_API_KEY;
+    const groqModel = 'llama-3.1-8b-instant';
+
+    if (!groqApiKey) {
+      throw new Error('GROQ_API_KEY is not configured');
+    }
 
     const fullPrompt = `
 You are a highly capable, voice-enabled virtual assistant named ${assistantName}, created by ${authorName}.
@@ -111,21 +117,35 @@ USER MESSAGE:
 "${userMessage}"
 `;
 
-    const result = await axios.post(apiGemURL, {
-      contents: [{
-        parts: [
-          { text: fullPrompt }
-        ]
-      }]
+    const result = await axios.post(groqApiUrl, {
+      model: groqModel,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a strict JSON-only assistant that returns one valid JSON object and nothing else.'
+        },
+        {
+          role: 'user',
+          content: fullPrompt
+        }
+      ],
+      temperature: 0.2,
     }, {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${groqApiKey}`
       }
     });
 
-    return result.data.candidates[0].content.parts[0];
+    const content = result.data?.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('Groq response did not include message content');
+    }
+
+    return { text: content };
   } catch (error) {
-    console.error('Error fetching Gemini response:', error);
+    console.error('Error fetching Groq response:', error?.response?.data || error.message || error);
     throw error;
   }
 };
