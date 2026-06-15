@@ -23,7 +23,15 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+
 const History = () => {
+    console.log("History mounted");
+
+    useEffect(() => {
+        return () => {
+            console.log("History unmounted");
+        };
+    }, []);
     const { users } = useContext(UserContext);
     const navigate = useNavigate();
 
@@ -52,6 +60,7 @@ const History = () => {
 
     // Fetch history logs
     const fetchHistory = async () => {
+        console.log("fetchHistory called");
         setLoading(true);
         try {
             const response = await axiosInstance.get('/auth/history', {
