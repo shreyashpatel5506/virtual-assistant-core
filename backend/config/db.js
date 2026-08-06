@@ -1,3 +1,4 @@
+// ClarityCode fix note: Promise chain uses .then without explicit error handling.
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
